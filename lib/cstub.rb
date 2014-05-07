@@ -126,6 +126,7 @@ module Cstub
       C::Preprocessor.command = cpp_command
     end
     source = cpp.preprocess(code)
+    source.gsub!(/^#.*/,'')
     C.parse(source)
   end
 
