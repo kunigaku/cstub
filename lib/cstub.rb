@@ -53,6 +53,7 @@ module Cstub
     typelist = collect_types ast
     ast.entities.each do |node|
       node.Declaration? or next
+      next if not node.declarators
       node.declarators.each do |decl|
         if decl.type.Function?
           retval = ""
@@ -79,15 +80,17 @@ module Cstub
           sig = "#{node.type.to_s}#{decl.indirect_type.type.to_s} #{decl.name}("
           paramlist = []
           parnum = 0
-          decl.indirect_type.params.each do |param|
-            par = "#{param.type.to_s} "
-            if param.name
-              par << "#{param.name.to_s}"
-            else
-              par << "par" + parnum.to_s
-              parnum = parnum + 1
+          if decl.indirect_type.params
+            decl.indirect_type.params.each do |param|
+              par = "#{param.type.to_s} "
+              if param.name
+                par << "#{param.name.to_s}"
+              else
+                par << "par" + parnum.to_s
+                parnum = parnum + 1
+              end
+              paramlist << par
             end
-            paramlist << par
           end
           sig << paramlist.join(", ") << ")\n{\n"
           if retval == ""
