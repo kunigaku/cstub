@@ -3,6 +3,34 @@ require "cstub/version"
 require 'cast'
 require 'optparse'
 
+# monkey patch to cast
+module C
+  class Preprocessor
+    def preprocess(text)
+      filename = nil
+      Tempfile.open(['cast-preprocessor-input.', '.c'], File.expand_path(pwd || '.')) do |file|
+        filename = file.path
+        file.puts text
+      end
+      output = `#{full_command(filename)}`
+      if $? == 0
+        return output
+      else
+        raise Error, output
+      end
+    end
+    def shellquote(arg)
+      if arg !~ /[\"\'\\$&<>|\s()]/
+        return arg
+      else
+        arg.gsub!(/([\"\\$&<>|])/, '\\\\\\1')
+        return "\"#{arg}\""
+      end
+    end
+  end
+end
+
+
 module Cstub
   def self.collect_types(ast)
     typelist = {}
