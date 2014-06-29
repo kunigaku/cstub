@@ -154,8 +154,18 @@ module Cstub
       C::Preprocessor.command = cpp_command
     end
     source = cpp.preprocess(code)
-    source.gsub!(/^#.*/,'')
-    C.parse(source)
+    orig_source = source
+    source = source.gsub(/^#.*/,'')
+    begin
+      C.parse(source)
+    rescue => exc
+      line = exc.to_s.to_i
+      sa = orig_source.split("\n")
+      puts "  " + sa[line-2] if 0 <= line-2
+      puts "> " + sa[line-1]
+      puts "  " + sa[line]   if line < sa.length
+      raise
+    end
   end
 
   def self.make_stubs(files, cpp_command, include_path, macros)
